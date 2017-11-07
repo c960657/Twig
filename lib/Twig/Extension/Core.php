@@ -982,6 +982,7 @@ function twig_trim_filter($string, $characterMask = null, $side = 'both')
  */
 function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', $charset = null, $autoescape = false)
 {
+    static $strategies = array('html', 'js', 'json', 'css', 'html_attr', 'url');
     if ($autoescape && $string instanceof Twig_Markup) {
         return $string;
     }
@@ -989,7 +990,7 @@ function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', 
     if (!is_string($string)) {
         if (is_object($string) && method_exists($string, '__toString')) {
             $string = (string) $string;
-        } elseif (in_array($strategy, array('html', 'js', 'css', 'html_attr', 'url'))) {
+        } elseif (in_array($strategy, $strategies)) {
             return $string;
         }
     }
@@ -1039,6 +1040,7 @@ function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', 
             return twig_convert_encoding($string, $charset, 'UTF-8');
 
         case 'js':
+        case 'json':
             // escape all non-alphanumeric characters
             // into their \xHH or \uHHHH representations
             if ('UTF-8' !== $charset) {
@@ -1049,7 +1051,7 @@ function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', 
                 throw new Twig_Error_Runtime('The string to escape is not a valid UTF-8 string.');
             }
 
-            $string = preg_replace_callback('#[^a-zA-Z0-9,\._]#Su', '_twig_escape_js_callback', $string);
+            $string = preg_replace_callback('#[^a-zA-Z0-9,\._]#Su', sprintf('_twig_escape_%s_callback', $strategy), $string);
 
             if ('UTF-8' !== $charset) {
                 $string = twig_convert_encoding($string, $charset, 'UTF-8');
@@ -1109,7 +1111,7 @@ function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', 
                 return call_user_func($escapers[$strategy], $env, $string, $charset);
             }
 
-            $validStrategies = implode(', ', array_merge(array('html', 'js', 'url', 'css', 'html_attr'), array_keys($escapers)));
+            $validStrategies = implode(', ', array_merge($strategies, array_keys($escapers)));
 
             throw new Twig_Error_Runtime(sprintf('Invalid escaping strategy "%s" (valid ones: %s).', $strategy, $validStrategies));
     }
@@ -1148,12 +1150,12 @@ if (function_exists('mb_convert_encoding')) {
     }
 }
 
-function _twig_escape_js_callback($matches)
+function _twig_escape_js_callback($matches, $json = false)
 {
     $char = $matches[0];
 
     // \xHH
-    if (!isset($char[1])) {
+    if (!isset($char[1]) && !$json) {
         return '\\x'.strtoupper(substr('00'.bin2hex($char), -2));
     }
 
@@ -1166,6 +1168,11 @@ function _twig_escape_js_callback($matches)
     }
 
     return sprintf('\u%04s\u%04s', substr($char, 0, -4), substr($char, -4));
+}
+
+function _twig_escape_json_callback($matches)
+{
+    return _twig_escape_js_callback($matches, true);
 }
 
 function _twig_escape_css_callback($matches)

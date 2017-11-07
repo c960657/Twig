@@ -447,6 +447,7 @@ strategies:
 .. code-block:: jinja
 
     {{ user.username|e('js') }}
+    {{ user.username|e('json') }}
     {{ user.username|e('css') }}
     {{ user.username|e('url') }}
     {{ user.username|e('html_attr') }}

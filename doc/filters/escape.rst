@@ -46,6 +46,9 @@ The ``escape`` filter supports the following escaping strategies:
 
 * ``js``: escapes a string for the **JavaScript context**.
 
+* ``json``: escapes a string for the **JSON context**. This is similar to
+  ``js`` except that ``\uXXXX`` is used instead of ``\xXX``.
+
 * ``css``: escapes a string for the **CSS context**. CSS escaping can be
   applied to any string being inserted into CSS and escapes everything except
   alphanumerics.

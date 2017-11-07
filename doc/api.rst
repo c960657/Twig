@@ -140,6 +140,8 @@ The following options are available:
   the template filename extension (this strategy does not incur any overhead at
   runtime as auto-escaping is done at compilation time.)
 
+  As of Twig 1.36, you can set the escaping strategy to use (``json``).
+
 * ``optimizations`` *integer*
 
   A flag that indicates which optimizations to apply

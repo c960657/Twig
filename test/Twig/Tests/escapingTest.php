@@ -78,6 +78,35 @@ class Twig_Test_EscapingTest extends \PHPUnit\Framework\TestCase
         ' ' => '\\x20',
     );
 
+    protected $jsonSpecialChars = array(
+        /* HTML special chars - escape without exception to hex */
+        '<' => '\\u003C',
+        '>' => '\\u003E',
+        '\'' => '\\u0027',
+        '"' => '\\u0022',
+        '&' => '\\u0026',
+        /* Characters beyond ASCII value 255 to unicode escape */
+        'Ā' => '\\u0100',
+        /* Immune chars excluded */
+        ',' => ',',
+        '.' => '.',
+        '_' => '_',
+        /* Basic alnums excluded */
+        'a' => 'a',
+        'A' => 'A',
+        'z' => 'z',
+        'Z' => 'Z',
+        '0' => '0',
+        '9' => '9',
+        /* Basic control characters and null */
+        "\r" => '\\u000D',
+        "\n" => '\\u000A',
+        "\t" => '\\u0009',
+        "\0" => '\\u0000',
+        /* Encode spaces for quoteless attribute protection */
+        ' ' => '\\u0020',
+    );
+
     protected $urlSpecialChars = array(
         /* HTML special chars - escape without exception to percent encoding */
         '<' => '%3C',
@@ -178,6 +207,23 @@ class Twig_Test_EscapingTest extends \PHPUnit\Framework\TestCase
     public function testJavascriptEscapingReturnsStringIfContainsOnlyDigits()
     {
         $this->assertEquals('123', twig_escape_filter($this->env, '123', 'js'));
+    }
+
+    public function testJsonEscapingConvertsSpecialChars()
+    {
+        foreach ($this->jsonSpecialChars as $key => $value) {
+            $this->assertEquals($value, twig_escape_filter($this->env, $key, 'json'), 'Failed to escape: '.$key);
+        }
+    }
+
+    public function testJsonEscapingReturnsStringIfZeroLength()
+    {
+        $this->assertEquals('', twig_escape_filter($this->env, '', 'json'));
+    }
+
+    public function testJsonEscapingReturnsStringIfContainsOnlyDigits()
+    {
+        $this->assertEquals('123', twig_escape_filter($this->env, '123', 'json'));
     }
 
     public function testCssEscapingConvertsSpecialChars()
